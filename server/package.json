@@ -1,0 +1,20 @@
+{
+  "name": "colyseus-examples",
+  "version": "1.0.0",
+  "description": "Usage Examples of Colyseus Game Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "colyseus": "^0.4.4",
+    "colyseus.js": "^0.6.0-alpha.1",
+    "express": "^4.14.0",
+    "serve-index": "^1.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^2.1.4"
+  }
+}
