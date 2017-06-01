@@ -10,12 +10,13 @@ export class ChatRoom extends Room<any> {
   }
 
   onJoin(client) {
-    this.state.messages.push(`${client.id} joined.`);
+    // this.state.messages.push(`${client.id} joined.`);
     console.log("Client", client.id, "joined");
   }
 
   onLeave(client) {
-    this.state.messages.push(`${client.id} left.`);
+    // this.state.messages.push(`${client.id} left`);
+    console.log("Client", client.id, "left");
   }
 
   onMessage(client, data) {

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using GameDevWare.Serialization;
+
+using MsgPack;
 
 namespace Colyseus
 {
-    using PatchListener = Listener<Action<string[], object>>;
-    using FallbackPatchListener = Listener<Action<string[], string, object>>;
+    using PatchListener = Listener<Action<string[], MessagePackObject>>;
+    using FallbackPatchListener = Listener<Action<string[], string, MessagePackObject>>;
 
     public struct Listener<T>
     {
@@ -17,26 +18,26 @@ namespace Colyseus
 
     public class DeltaContainer
     {
-        public IndexedDictionary<string, object> data;
+        public MessagePackObject data;
         private Dictionary<string, List<PatchListener>> listeners;
         private List<FallbackPatchListener> fallbackListeners;
 
         private Dictionary<string, Regex> matcherPlaceholders = new Dictionary<string, Regex>()
         {
-            {":id", new Regex(@"^([a-zA-Z0-9\-_]+)$")},
-            {":number", new Regex(@"^([0-9]+)$")},
-            {":string", new Regex(@"^(\w+)$")},
-            {":axis", new Regex(@"^([xyz])$")},
-            {"*", new Regex(@"(.*)")},
+            { ":id", new Regex(@"^([a-zA-Z0-9\-_]+)$") },
+            { ":number", new Regex(@"^([0-9]+)$") },
+            { ":string", new Regex(@"^(\w+)$") },
+            { ":axis", new Regex(@"^([xyz])$") },
+            { "*", new Regex(@"(.*)") },
         };
 
-        public DeltaContainer(IndexedDictionary<string, object> data)
+        public DeltaContainer(MessagePackObject data)
         {
             this.data = data;
             this.Reset();
         }
 
-        public PatchObject[] Set(IndexedDictionary<string, object> newData)
+        public PatchObject[] Set(MessagePackObject newData)
         {
             var patches = Compare.GetPatchList(this.data, newData);
 
@@ -51,7 +52,7 @@ namespace Colyseus
             this.matcherPlaceholders[placeholder] = matcher;
         }
 
-        public FallbackPatchListener Listen(Action<string[], string, object> callback)
+        public FallbackPatchListener Listen(Action<string[], string, MessagePackObject> callback)
         {
             FallbackPatchListener listener = new FallbackPatchListener
             {
@@ -65,7 +66,7 @@ namespace Colyseus
             return listener;
         }
 
-        public PatchListener Listen(string segments, string operation, Action<string[], object> callback)
+        public PatchListener Listen(string segments, string operation, Action<string[], MessagePackObject> callback)
         {
             var regexpRules = this.ParseRegexRules(segments.Split('/'));
 
@@ -114,6 +115,7 @@ namespace Colyseus
                     {
                         regexpRules[i] = this.matcherPlaceholders["*"];
                     }
+
                 }
                 else
                 {
@@ -126,6 +128,7 @@ namespace Colyseus
 
         private void CheckPatches(PatchObject[] patches)
         {
+
             for (var i = patches.Length - 1; i >= 0; i--)
             {
                 var matched = false;
@@ -150,7 +153,9 @@ namespace Colyseus
                         this.fallbackListeners[j].callback.Invoke(patches[i].path, patches[i].op, patches[i].value);
                     }
                 }
+
             }
+
         }
 
         private string[] CheckPatch(PatchObject patch, PatchListener listener)
@@ -169,6 +174,7 @@ namespace Colyseus
                 if (matches.Count == 0 || matches.Count > 2)
                 {
                     return new string[] { };
+
                 }
                 else if (matches[0].Groups.Count >= 1)
                 {
@@ -184,11 +190,12 @@ namespace Colyseus
         {
             this.listeners = new Dictionary<string, List<PatchListener>>()
             {
-                {"add", new List<PatchListener>()},
-                {"remove", new List<PatchListener>()},
-                {"replace", new List<PatchListener>()}
+                { "add", new List<PatchListener>() },
+                { "remove", new List<PatchListener>() },
+                { "replace", new List<PatchListener>() }
             };
             this.fallbackListeners = new List<FallbackPatchListener>();
         }
+
     }
 }

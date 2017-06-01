@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using GameDevWare.Serialization;
+
+using MsgPack;
+using MsgPack.Serialization;
 using UnityEngine;
 
 namespace Colyseus
@@ -17,8 +17,8 @@ namespace Colyseus
         /// </summary>
         public String name;
 
-        public DeltaContainer state = new DeltaContainer(new IndexedDictionary<string, object>());
-        //public IndexedDictionary<string, object> state;
+        public DeltaContainer state = new DeltaContainer(new MessagePackObject(new MessagePackObjectDictionary()));
+        //public MessagePackObject state;
 
         private int _id = 0;
         private byte[] _previousState = null;
@@ -81,7 +81,7 @@ namespace Colyseus
         }
 
 
-        public void SetState(IndexedDictionary<string, object> state, double remoteCurrentTime, int remoteElapsedTime)
+        public void SetState(MessagePackObject state, int remoteCurrentTime, int remoteElapsedTime)
         {
             this.state.Set(state);
 
@@ -89,18 +89,11 @@ namespace Colyseus
             // Create a "clock" for remoteCurrentTime / remoteElapsedTime to match the JavaScript API.
 
             // Creates serializer.
-            var stream = new MemoryStream();
-            var s = (IndexedDictionary<string, object>)state;
-            var dic = Utils.ConvertIndexedDictionary(s);
-
-            MsgPack.Serialize(dic, stream);
-            var ser = stream.ToArray();
-
+            var serializer = MessagePackSerializer.Get<MessagePackObject>();
             if (this.OnUpdate != null)
                 this.OnUpdate.Invoke(this, new RoomUpdateEventArgs(this, state, null));
-            this._previousState = ser;
+            this._previousState = serializer.PackSingleObject(state);
         }
-
 
         /// <summary>
         /// Leave the room.
@@ -135,11 +128,23 @@ namespace Colyseus
         /// <summary>Internal usage, shouldn't be called.</summary>
         public void ApplyPatch(byte[] delta)
         {
+            string s = "";
+            foreach (var b in this._previousState)
+            {
+                s += b + " ";
+            }
+            Debug.Log(s);
+            s = "";
+            foreach (var b in delta)
+            {
+                s += b + " ";
+            }
+            Debug.Log(s);
+
             this._previousState = Fossil.Delta.Apply(this._previousState, delta);
 
-            var stream = new MemoryStream(this._previousState);
-            var raw = MsgPack.Deserialize<object>(stream);
-            var newState = (IndexedDictionary<string, object>)raw;
+            var serializer = MessagePackSerializer.Get<MessagePackObject>();
+            var newState = serializer.UnpackSingleObject(this._previousState);
 
             this.state.Set(newState);
             //this.state = state
