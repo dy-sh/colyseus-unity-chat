@@ -90,10 +90,7 @@ namespace Colyseus
 
             // Creates serializer.
             var stream = new MemoryStream();
-            var s = (IndexedDictionary<string, object>)state;
-            var dic = Utils.ConvertIndexedDictionary(s);
-
-            MsgPack.Serialize(dic, stream);
+            MsgPack.Serialize(state, stream);
             var ser = stream.ToArray();
 
             if (this.OnUpdate != null)

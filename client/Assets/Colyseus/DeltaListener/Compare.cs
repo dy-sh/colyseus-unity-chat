@@ -29,8 +29,6 @@ namespace Colyseus
             IndexedDictionary<string, object> objPacked, List<PatchObject> patches, List<string> path)
         {
             var obj = objPacked;
-            // if (mirrorPacked.GetType() == typeof(IndexedDictionary<string, object>))
-            // mirrorPacked = Utils.ConvertDictionary((IndexedDictionary<string, object>)mirrorPacked);
             var mirror = mirrorPacked;
 
 

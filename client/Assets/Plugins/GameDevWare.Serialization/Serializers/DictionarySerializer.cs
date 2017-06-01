@@ -173,14 +173,14 @@ namespace GameDevWare.Serialization.Serializers
             if (writer == null) throw new ArgumentNullException("writer");
             if (value == null) throw new ArgumentNullException("value");
 
-            var dictionary = (IDictionary)value;
+            var dictionary = (IDictionary<string, object>)value;
             // ReSharper disable PossibleMultipleEnumeration
             writer.Context.Hierarchy.Push(value);
             // object
             if (isStringKeyType)
             {
                 writer.WriteObjectBegin(dictionary.Count);
-                foreach (DictionaryEntry pair in dictionary)
+                foreach (var pair in dictionary)
                 {
                     var keyStr = Convert.ToString(pair.Key, writer.Context.Format);
                     // key
@@ -193,7 +193,7 @@ namespace GameDevWare.Serialization.Serializers
             else
             {
                 writer.WriteArrayBegin(dictionary.Count);
-                foreach (DictionaryEntry pair in dictionary)
+                foreach (var pair in dictionary)
                 {
                     writer.WriteArrayBegin(2);
                     writer.WriteValue(pair.Key, keyType);
