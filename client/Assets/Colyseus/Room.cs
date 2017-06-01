@@ -138,7 +138,8 @@ namespace Colyseus
             this._previousState = Fossil.Delta.Apply(this._previousState, delta);
 
             var stream = new MemoryStream(this._previousState);
-            var newState = (IndexedDictionary<string, object>)MsgPack.Deserialize<object>(stream);
+            var raw = MsgPack.Deserialize<object>(stream);
+            var newState = (IndexedDictionary<string, object>)raw;
 
             this.state.Set(newState);
             //this.state = state
