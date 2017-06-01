@@ -40,7 +40,7 @@ namespace Colyseus
 		/// <summary>
 		/// New state of the <see cref="Room" />
 		/// </summary>
-		public Object state;
+		public IndexedDictionary<string, object> state;
 
 		/// <summary>
 		/// Patches applied to the <see cref="Room" /> state.
@@ -49,7 +49,7 @@ namespace Colyseus
 
 		/// <summary>
 		/// </summary>
-		public RoomUpdateEventArgs(Room room, Object state, string patches = null)
+		public RoomUpdateEventArgs(Room room, IndexedDictionary<string, object> state, string patches = null)
 		{
 			this.room = room;
 			this.state = state;

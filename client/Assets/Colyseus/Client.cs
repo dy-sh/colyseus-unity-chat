@@ -97,9 +97,12 @@ namespace Colyseus
 		void ParseMessage(byte[] recv)
 		{
 			var stream = new MemoryStream(recv);
-			object raw = MsgPack.Deserialize<object>(stream);
+			var raw = MsgPack.Deserialize<List<object>>(stream);
 
-			var message = (List<object>) raw;
+			//object[] message = new object[raw.Values.Count];
+			//raw.Values.CopyTo(message, 0);
+
+			var message = raw;
 			var code = (byte) message[0];
 
 			// Parse roomId or roomName
@@ -108,20 +111,21 @@ namespace Colyseus
 			string roomId = "0";
 			string roomName = null;
 
-			// try
-			// {
-			//     var nInt = message[1] as int?;
-			//     roomIdInt32 = nInt.Value;
-			//     roomId = roomIdInt32.ToString();
-			// }
-			// catch (InvalidOperationException)
-			// {
-			//     try
-			//     {
-			//         roomName = (string)message[1];
-			//     }
-			//     catch (InvalidOperationException) { }
-			// }
+			try
+			{
+				roomIdInt32 = (byte) message[1];
+				roomId = roomIdInt32.ToString();
+			}
+			catch (Exception)
+			{
+				try
+				{
+					roomName = (string) message[1];
+				}
+				catch (Exception)
+				{
+				}
+			}
 
 			if (code == Protocol.USER_ID)
 			{
@@ -157,7 +161,7 @@ namespace Colyseus
 			}
 			else if (code == Protocol.ROOM_STATE)
 			{
-				var state = message[2];
+				var state = (IndexedDictionary<string, object>) message[2];
 				var remoteCurrentTime = (double) message[3];
 				var remoteElapsedTime = (byte) message[4];
 
@@ -169,13 +173,13 @@ namespace Colyseus
 			{
 				room = this.rooms[roomId];
 
-				IList<object> patchBytes = (List<object>) message[2];
+				var patchBytes = (List<object>) message[2];
 				byte[] patches = new byte[patchBytes.Count];
 
 				int idx = 0;
-				foreach (object obj in patchBytes)
+				foreach (byte obj in patchBytes)
 				{
-					patches[idx] = (Byte) obj;
+					patches[idx] = obj;
 					idx++;
 				}
 
