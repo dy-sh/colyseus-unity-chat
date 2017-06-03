@@ -9,9 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/fast-json-patch": "^1.1.5",
     "colyseus": "^0.4.4",
     "colyseus.js": "^0.6.0-alpha.1",
     "express": "^4.14.0",
+    "fast-json-patch": "^1.2.2",
     "serve-index": "^1.8.0"
   },
   "devDependencies": {

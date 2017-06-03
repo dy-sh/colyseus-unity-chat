@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as express from 'express';
 import * as serveIndex from 'serve-index';
 import { createServer } from 'http';
-import { Server } from 'colyseus';
+import { Server } from './colyseus';
 
 // Require ChatRoom handler
 import { ChatRoom } from "./rooms/01-basic";
@@ -20,8 +20,8 @@ const gameServer = new Server({ server: httpServer });
 gameServer.register("chat", ChatRoom);
 
 app.use(express.static(path.join(__dirname, "static")));
-app.use('/', serveIndex(path.join(__dirname, "static"), {'icons': true}))
+app.use('/', serveIndex(path.join(__dirname, "static"), { 'icons': true }))
 
 httpServer.listen(port);
 
-console.log(`Listening on http://localhost:${ port }`);
+console.log(`Listening on http://localhost:${port}`);

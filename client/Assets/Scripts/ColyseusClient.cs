@@ -2,7 +2,6 @@
 using System.Collections;
 using System;
 using Colyseus;
-using GameDevWare.Serialization;
 
 public class ColyseusClient : MonoBehaviour
 {
@@ -24,10 +23,10 @@ public class ColyseusClient : MonoBehaviour
         chatRoom.OnJoin += OnRoomJoined;
         chatRoom.OnUpdate += OnUpdateHandler;
 
-        chatRoom.state.Listen("players", "add", this.OnAddPlayer);
-        chatRoom.state.Listen("players/:id/:axis", "replace", this.OnPlayerMove);
-        chatRoom.state.Listen("players/:id", "remove", this.OnPlayerRemoved);
-        chatRoom.state.Listen(this.OnChangeFallback);
+        // chatRoom.state.Listen("players", "add", this.OnAddPlayer);
+        // chatRoom.state.Listen("players/:id/:axis", "replace", this.OnPlayerMove);
+        // chatRoom.state.Listen("players/:id", "remove", this.OnPlayerRemoved);
+        // chatRoom.state.Listen(this.OnChangeFallback);
 
         int i = 0;
 
@@ -66,22 +65,22 @@ public class ColyseusClient : MonoBehaviour
 
     void OnAddPlayer(string[] path, object value)
     {
-        Debug.Log("OnAddPlayer | " + PathToString(path) + " | " + ValueToString(value));
+        Debug.Log("OnAddPlayer | " + PathToString(path) + " | " + ChatUtils.ValueToString(value));
     }
 
     void OnPlayerMove(string[] path, object value)
     {
-        Debug.Log("OnPlayerMove | " + PathToString(path) + " | " + ValueToString(value));
+        Debug.Log("OnPlayerMove | " + PathToString(path) + " | " + ChatUtils.ValueToString(value));
     }
 
     void OnPlayerRemoved(string[] path, object value)
     {
-        Debug.Log("OnPlayerRemoved | " + PathToString(path) + " | " + ValueToString(value));
+        Debug.Log("OnPlayerRemoved | " + PathToString(path) + " | " + ChatUtils.ValueToString(value));
     }
 
     void OnChangeFallback(string[] path, string operation, object value)
     {
-        Debug.Log("OnChangeFallback | " + operation + " | " + PathToString(path) + " | " + ValueToString(value));
+        Debug.Log("OnChangeFallback | " + operation + " | " + PathToString(path) + " | " + ChatUtils.ValueToString(value));
     }
 
     private string PathToString(string[] path)
@@ -96,31 +95,6 @@ public class ColyseusClient : MonoBehaviour
         return fullPath;
     }
 
-    private string ValueToString(object value)
-    {
-        if (value is IndexedDictionary<string, object>)
-        {
-            string val = "";
-            var dic = (IndexedDictionary<string, object>)value;
-            foreach (var key in dic.Keys)
-            {
-            }
-
-            for (int i = 0; i < dic.Keys.Count; i++)
-            {
-                var key = dic.Keys[i];
-                val += key + ":" + dic[key];
-                if (i != dic.Keys.Count - 1)
-                    val += ", ";
-            }
-
-            return val;
-        }
-        else
-        {
-            return value.ToString();
-        }
-    }
 
     void OnUpdateHandler(object sender, RoomUpdateEventArgs e)
     {

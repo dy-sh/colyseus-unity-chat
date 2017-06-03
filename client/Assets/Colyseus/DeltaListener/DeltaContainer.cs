@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using GameDevWare.Serialization;
 
 namespace Colyseus
 {
@@ -17,7 +16,7 @@ namespace Colyseus
 
     public class DeltaContainer
     {
-        public IndexedDictionary<string, object> data;
+        public RoomState data;
         private Dictionary<string, List<PatchListener>> listeners;
         private List<FallbackPatchListener> fallbackListeners;
 
@@ -30,21 +29,21 @@ namespace Colyseus
             {"*", new Regex(@"(.*)")},
         };
 
-        public DeltaContainer(IndexedDictionary<string, object> data)
+        public DeltaContainer(RoomState data)
         {
             this.data = data;
             this.Reset();
         }
 
-        public PatchObject[] Set(IndexedDictionary<string, object> newData)
-        {
-            var patches = Compare.GetPatchList(this.data, newData);
+        // public PatchObject[] Set(RoomState newData)
+        // {
+        //     var patches = Compare.GetPatchList(this.data, newData);
 
-            this.CheckPatches(patches);
-            this.data = newData;
+        //     this.CheckPatches(patches);
+        //     this.data = newData;
 
-            return patches;
-        }
+        //     return patches;
+        // }
 
         public void RegisterPlaceholder(string placeholder, Regex matcher)
         {
@@ -124,61 +123,61 @@ namespace Colyseus
             return regexpRules;
         }
 
-        private void CheckPatches(PatchObject[] patches)
-        {
-            for (var i = patches.Length - 1; i >= 0; i--)
-            {
-                var matched = false;
-                var op = patches[i].op;
-                for (var j = 0; j < this.listeners[op].Count; j++)
-                {
-                    var listener = this.listeners[op][j];
-                    var matches = this.CheckPatch(patches[i], listener);
-                    if (matches.Length > 0)
-                    {
-                        listener.callback.Invoke(matches, patches[i].value);
-                        matched = true;
-                    }
-                }
+        // private void CheckPatches(PatchObject[] patches)
+        // {
+        //     for (var i = patches.Length - 1; i >= 0; i--)
+        //     {
+        //         var matched = false;
+        //         var op = patches[i].op;
+        //         for (var j = 0; j < this.listeners[op].Count; j++)
+        //         {
+        //             var listener = this.listeners[op][j];
+        //             var matches = this.CheckPatch(patches[i], listener);
+        //             if (matches.Length > 0)
+        //             {
+        //                 listener.callback.Invoke(matches, patches[i].value);
+        //                 matched = true;
+        //             }
+        //         }
 
-                // check for fallback listener
-                var fallbackListenersCount = this.fallbackListeners.Count;
-                if (!matched && fallbackListenersCount > 0)
-                {
-                    for (var j = 0; j < fallbackListenersCount; j++)
-                    {
-                        this.fallbackListeners[j].callback.Invoke(patches[i].path, patches[i].op, patches[i].value);
-                    }
-                }
-            }
-        }
+        //         // check for fallback listener
+        //         var fallbackListenersCount = this.fallbackListeners.Count;
+        //         if (!matched && fallbackListenersCount > 0)
+        //         {
+        //             for (var j = 0; j < fallbackListenersCount; j++)
+        //             {
+        //                 this.fallbackListeners[j].callback.Invoke(patches[i].path, patches[i].op, patches[i].value);
+        //             }
+        //         }
+        //     }
+        // }
 
-        private string[] CheckPatch(PatchObject patch, PatchListener listener)
-        {
-            // skip if rules count differ from patch
-            if (patch.path.Length != listener.rules.Length)
-            {
-                return new string[] { };
-            }
+        // private string[] CheckPatch(PatchObject patch, PatchListener listener)
+        // {
+        //     // skip if rules count differ from patch
+        //     if (patch.path.Length != listener.rules.Length)
+        //     {
+        //         return new string[] { };
+        //     }
 
-            List<string> pathVars = new List<string>();
+        //     List<string> pathVars = new List<string>();
 
-            for (var i = 0; i < listener.rules.Length; i++)
-            {
-                var matches = listener.rules[i].Matches(patch.path[i]);
-                if (matches.Count == 0 || matches.Count > 2)
-                {
-                    return new string[] { };
-                }
-                else if (matches[0].Groups.Count >= 1)
-                {
-                    pathVars.Add(matches[0].ToString());
-                    // pathVars = pathVars.concat(matches.slice(1));
-                }
-            }
+        //     for (var i = 0; i < listener.rules.Length; i++)
+        //     {
+        //         var matches = listener.rules[i].Matches(patch.path[i]);
+        //         if (matches.Count == 0 || matches.Count > 2)
+        //         {
+        //             return new string[] { };
+        //         }
+        //         else if (matches[0].Groups.Count >= 1)
+        //         {
+        //             pathVars.Add(matches[0].ToString());
+        //             // pathVars = pathVars.concat(matches.slice(1));
+        //         }
+        //     }
 
-            return pathVars.ToArray();
-        }
+        //     return pathVars.ToArray();
+        // }
 
         private void Reset()
         {

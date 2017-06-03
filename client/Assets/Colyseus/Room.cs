@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using GameDevWare.Serialization;
+using Marvin.JsonPatch;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Colyseus
@@ -17,11 +18,12 @@ namespace Colyseus
         /// </summary>
         public String name;
 
-        public DeltaContainer state = new DeltaContainer(new IndexedDictionary<string, object>());
+        // public DeltaContainer state = new DeltaContainer(new RoomState());
         //public IndexedDictionary<string, object> state;
+        public RoomState state;
 
-        private int _id = 0;
-        private byte[] _previousState = null;
+        private long _id = 0;
+        private RoomState _previousState;
 
         /// <summary>
         /// Occurs when the <see cref="Client"/> successfully connects to the <see cref="Room"/>.
@@ -70,7 +72,7 @@ namespace Colyseus
         /// <summary>
         /// Contains the id of this room, used internally for communication.
         /// </summary>
-        public int id
+        public long id
         {
             get { return this._id; }
             set
@@ -81,21 +83,16 @@ namespace Colyseus
         }
 
 
-        public void SetState(IndexedDictionary<string, object> state, double remoteCurrentTime, int remoteElapsedTime)
+        public void SetState(RoomState state, double remoteCurrentTime, long remoteElapsedTime)
         {
-            this.state.Set(state);
+            this.state = state;
 
             // TODO:
             // Create a "clock" for remoteCurrentTime / remoteElapsedTime to match the JavaScript API.
 
             // Creates serializer.
-            var stream = new MemoryStream();
-            MsgPack.Serialize(state, stream);
-            var ser = stream.ToArray();
-
             if (this.OnUpdate != null)
                 this.OnUpdate.Invoke(this, new RoomUpdateEventArgs(this, state, null));
-            this._previousState = ser;
         }
 
 
@@ -126,22 +123,19 @@ namespace Colyseus
         /// <summary>Internal usage, shouldn't be called.</summary>
         public void ReceiveData(object data)
         {
-            this.OnData.Invoke(this, new MessageEventArgs(this, data));
+            if (this.OnData != null)
+                this.OnData.Invoke(this, new MessageEventArgs(this, data));
         }
 
         /// <summary>Internal usage, shouldn't be called.</summary>
-        public void ApplyPatch(byte[] delta)
+        public void ApplyPatch(string patch)
         {
-            this._previousState = Fossil.Delta.Apply(this._previousState, delta);
+            var deserialized = JsonConvert.DeserializeObject<JsonPatchDocument<RoomState>>(patch);
+            deserialized.ApplyTo(state);
 
-            var stream = new MemoryStream(this._previousState);
-            var raw = MsgPack.Deserialize<object>(stream);
-            var newState = (IndexedDictionary<string, object>)raw;
-
-            this.state.Set(newState);
             //this.state = state
             if (this.OnUpdate != null)
-                this.OnUpdate.Invoke(this, new RoomUpdateEventArgs(this, this.state.data, null));
+                this.OnUpdate.Invoke(this, new RoomUpdateEventArgs(this, this.state, null));
         }
 
         /// <summary>Internal usage, shouldn't be called.</summary>

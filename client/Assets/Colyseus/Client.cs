@@ -3,7 +3,10 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using GameDevWare.Serialization;
+using Newtonsoft.Json;
+using Marvin.JsonPatch;
+using Newtonsoft.Json.Linq;
+using System.Text;
 #if !WINDOWS_UWP
 using WebSocketSharp;
 #endif
@@ -94,26 +97,34 @@ namespace Colyseus
         }
 #endif
 
+
+
         void ParseMessage(byte[] recv)
         {
-            var stream = new MemoryStream(recv);
-            var raw = MsgPack.Deserialize<List<object>>(stream);
+            var rec = System.Text.Encoding.Default.GetString(recv);
+            var message = JsonConvert.DeserializeObject<object[]>(rec);
 
             //object[] message = new object[raw.Values.Count];
             //raw.Values.CopyTo(message, 0);
 
-            var message = raw;
-            var code = (byte)message[0];
+            var code = (long)message[0];
+
+            if (code == Protocol.USER_ID)
+            {
+                this.id = (string)message[1];
+                this.OnOpen.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
             // Parse roomId or roomName
             Room room = null;
-            int roomIdInt32 = 0;
+            long roomIdInt32 = 0;
             string roomId = "0";
             string roomName = null;
 
             try
             {
-                roomIdInt32 = (byte)message[1];
+                roomIdInt32 = (long)message[1];
                 roomId = roomIdInt32.ToString();
             }
             catch (Exception)
@@ -127,12 +138,8 @@ namespace Colyseus
                 }
             }
 
-            if (code == Protocol.USER_ID)
-            {
-                this.id = (string)message[1];
-                this.OnOpen.Invoke(this, EventArgs.Empty);
-            }
-            else if (code == Protocol.JOIN_ROOM)
+
+            if (code == Protocol.JOIN_ROOM)
             {
                 roomName = (string)message[2];
 
@@ -161,9 +168,11 @@ namespace Colyseus
             }
             else if (code == Protocol.ROOM_STATE)
             {
-                var state = (IndexedDictionary<string, object>)message[2];
-                var remoteCurrentTime = (double)message[3];
-                var remoteElapsedTime = (byte)message[4];
+                var state = ((JObject)message[2]).ToObject<RoomState>();
+
+
+                var remoteCurrentTime = (long)message[3];
+                var remoteElapsedTime = (long)message[4];
 
                 room = this.rooms[roomId];
                 // JToken.Parse (message [2].ToString ())
@@ -172,24 +181,14 @@ namespace Colyseus
             else if (code == Protocol.ROOM_STATE_PATCH)
             {
                 room = this.rooms[roomId];
-
-                var patchBytes = (List<object>)message[2];
-                byte[] patches = new byte[patchBytes.Count];
-
-                int idx = 0;
-                foreach (byte obj in patchBytes)
-                {
-                    patches[idx] = obj;
-                    idx++;
-                }
-
-                room.ApplyPatch(patches);
+                room.ApplyPatch((string)message[2]);
             }
             else if (code == Protocol.ROOM_DATA)
             {
                 room = this.rooms[roomId];
                 room.ReceiveData(message[2]);
-                this.OnMessage.Invoke(this, new MessageEventArgs(room, message[2]));
+                if (this.OnMessage != null)
+                    this.OnMessage.Invoke(this, new MessageEventArgs(room, message[2]));
             }
         }
 
@@ -221,10 +220,9 @@ namespace Colyseus
         /// <param name="data">Data to be sent to all connected rooms.</param>
         public void Send(object[] data)
         {
-            var stream = new MemoryStream();
-            MsgPack.Serialize(data, stream);
-            var ser = stream.ToArray();
-            this.ws.Send(ser);
+            var json = JsonConvert.SerializeObject(data);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            this.ws.Send(bytes);
         }
 
 

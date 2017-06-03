@@ -1,10 +1,10 @@
-import { Room } from "colyseus";
+import { Room } from "../colyseus";
 
 export class ChatRoom extends Room<any> {
 
   constructor(options) {
     super(options);
-    this.setPatchRate(1000);
+    this.setPatchRate(50);
     this.setState({ messages: [] });
     console.log("ChatRoom created!", options);
   }
