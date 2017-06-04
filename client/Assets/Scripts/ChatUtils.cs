@@ -16,6 +16,15 @@ public static class ChatUtils
 
     public static string ValueToString(object value)
     {
+        if (value is byte[])
+        {
+            string val = "";
+            foreach (var b in (byte[])value)
+            {
+                val += b + " ";
+            }
+            return val;
+        }
         if (value is IndexedDictionary<string, object>)
         {
             string val = "";
