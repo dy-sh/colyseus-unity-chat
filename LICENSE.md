@@ -1,4 +1,4 @@
-Copyright (c) 2017 Derwish (derwish.pro@gmail.com)
+Copyright (c) 2017 Dmitry Savosh (d.savosh@gmail.com)
 
 MIT License:
 
